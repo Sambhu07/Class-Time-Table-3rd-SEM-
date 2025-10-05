@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attendance Calculator - 24E1P1</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --neon-cyan: #00fff9;
+      --neon-magenta: #ff00ff;
+      --neon-purple: #8b5cf6;
+      --dark-bg: #0a0a0f;
+      --glass-bg: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0a0a0f 0%, #1a0a2e 50%, #0a0a0f 100%);
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* Animated Background Orbs */
+    .bg-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.3;
+      animation: float 20s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+    
+    .orb-1 {
+      width: 400px;
+      height: 400px;
+      background: var(--neon-cyan);
+      top: -100px;
+      left: -100px;
+      animation-delay: 0s;
+    }
+    
+    .orb-2 {
+      width: 350px;
+      height: 350px;
+      background: var(--neon-magenta);
+      bottom: -100px;
+      right: -100px;
+      animation-delay: 5s;
+    }
+    
+    .orb-3 {
+      width: 300px;
+      height: 300px;
+      background: var(--neon-purple);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation-delay: 10s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      25% { transform: translate(30px, -50px) scale(1.1); }
+      50% { transform: translate(-30px, 30px) scale(0.95); }
+      75% { transform: translate(50px, 20px) scale(1.05); }
+    }
+
+    /* Glass Card */
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .glass-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+      animation: shimmer 3s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    /* Neon Glow Text */
+    .neon-text {
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple), var(--neon-magenta));
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.5));
+      animation: glow 3s ease-in-out infinite alternate;
+      display: inline-block;
+    }
+
+    /* Animated Title Emoji */
+    .title-emoji {
+      display: inline-block;
+      animation: bounce 2s ease-in-out infinite;
+      margin-left: 10px;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      25% { transform: translateY(-5px) rotate(-5deg); }
+      75% { transform: translateY(-5px) rotate(5deg); }
+    }
+
+    @keyframes glow {
+      0% { filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.5)); }
+      100% { filter: drop-shadow(0 0 30px rgba(0, 255, 249, 0.8)); }
+    }
+
+    /* Main Container */
+    .calculator-container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 500px;
+      animation: slideUp 0.6s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Subtitle animation */
+    .subtitle {
+      color: rgba(255, 255, 255, 0.6);
+      transition: color 0.3s ease;
+    }
+
+    .subtitle:hover {
+      color: var(--neon-cyan);
+      cursor: default;
+    }
+
+    /* Input Styles */
+    .input-field {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      color: white;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      width: 100%;
+      position: relative;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 20px rgba(0, 255, 249, 0.3);
+      background: rgba(0, 255, 249, 0.05);
+      transform: scale(1.02);
+    }
+
+    .input-field::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Input hover effect */
+    .input-field:hover:not(:focus) {
+      border-color: rgba(139, 92, 246, 0.5);
+      background: rgba(139, 92, 246, 0.03);
+    }
+
+    /* Select Dropdown */
+    select.input-field {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2300fff9' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 18px center;
+      cursor: pointer;
+      color: white !important;
+    }
+
+    select.input-field option {
+      background: #1a0a2e;
+      color: white;
+      padding: 8px;
+    }
+
+    select.input-field:focus option {
+      background: #2a1a3e;
+      color: var(--neon-cyan);
+    }
+
+    /* Calculate Button */
+    .calculate-btn {
+      background: linear-gradient(135deg, var(--neon-purple), var(--neon-magenta));
+      border: none;
+      border-radius: 14px;
+      padding: 16px 32px;
+      color: white;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .calculate-btn .btn-icon {
+      display: inline-block;
+      transition: transform 0.3s ease;
+    }
+
+    .calculate-btn:hover .btn-icon {
+      transform: rotate(20deg) scale(1.2);
+    }
+
+    .calculate-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(255, 0, 255, 0.6);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 8px 30px rgba(255, 0, 255, 0.6); }
+      50% { box-shadow: 0 8px 40px rgba(0, 255, 249, 0.8); }
+    }
+
+    .calculate-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .calculate-btn:hover::before {
+      left: 100%;
+    }
+
+    .calculate-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* Results Card */
+    .results-card {
+      margin-top: 24px;
+      padding: 24px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(0, 255, 249, 0.1));
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      border-radius: 16px;
+      animation: fadeInScale 0.5s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @keyframes fadeInScale {
+      from { 
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to { 
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .results-card.hidden {
+      display: none;
+    }
+
+    /* Mood Indicator */
+    .mood-indicator {
+      font-size: 48px;
+      animation: floatMood 2s ease-in-out infinite;
+      display: inline-block;
+      margin-bottom: 16px;
+    }
+
+    @keyframes floatMood {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-10px) scale(1.1); }
+    }
+
+    .result-text {
+      font-size: 18px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .result-highlight {
+      color: var(--neon-cyan);
+      font-weight: 700;
+      text-shadow: 0 0 10px rgba(0, 255, 249, 0.5);
+      display: inline-block;
+      animation: subtle-pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes subtle-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .result-warning {
+      color: #ff6b6b;
+      font-weight: 700;
+      text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+      animation: warning-flash 1.5s ease-in-out infinite;
+    }
+
+    @keyframes warning-flash {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+
+    .result-success {
+      color: #4ade80;
+      font-weight: 700;
+      text-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+    }
+
+    .result-stats {
+      background: var(--glass-bg);
+      padding: 16px;
+      border-radius: 12px;
+      margin-top: 12px;
+      font-size: 15px;
+      line-height: 1.8;
+      border: 1px solid var(--glass-border);
+      position: relative;
+    }
+
+    .stat-row {
+      padding: 4px 0;
+      transition: all 0.3s ease;
+      border-radius: 8px;
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+
+    .stat-row:hover {
+      background: rgba(139, 92, 246, 0.1);
+      transform: translateX(4px);
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      margin-top: 16px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 3px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 12px;
+      border-radius: 20px;
+      transition: width 0.8s ease;
+      background: linear-gradient(90deg, var(--neon-purple), var(--neon-cyan));
+      box-shadow: 0 0 20px rgba(0, 255, 249, 0.5);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      animation: shimmer 2s ease-in-out infinite;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, rgba(255, 107, 107, 0.95), rgba(255, 0, 255, 0.95));
+      color: white;
+      padding: 16px 24px;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(255, 0, 0, 0.3);
+      z-index: 1000;
+      animation: slideInRight 0.4s ease;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .toast-icon {
+      font-size: 20px;
+      animation: shake 0.5s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px) rotate(-5deg); }
+      75% { transform: translateX(5px) rotate(5deg); }
+    }
+
+    @keyframes slideInRight {
+      from { 
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to { 
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .toast.hide {
+      animation: slideOutRight 0.4s ease forwards;
+    }
+
+    @keyframes slideOutRight {
+      to { 
+        transform: translateX(400px);
+        opacity: 0;
+      }
+    }
+
+    /* Back Button */
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 100;
+      padding: 12px 20px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      color: white;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .back-btn .arrow {
+      transition: transform 0.3s ease;
+    }
+
+    .back-btn:hover .arrow {
+      transform: translateX(-4px);
+    }
+
+    .back-btn:hover {
+      background: rgba(0, 255, 249, 0.1);
+      border-color: var(--neon-cyan);
+      box-shadow: 0 5px 20px rgba(0, 255, 249, 0.3);
+    }
+
+    /* Label */
+    .input-label {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .label-icon {
+      opacity: 0.6;
+      transition: opacity 0.3s ease;
+    }
+
+    .input-wrapper:hover .label-icon {
+      opacity: 1;
+    }
+
+    /* Fun Quote */
+    .fun-quote {
+      text-align: center;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 20px;
+      font-style: italic;
+      animation: fadeIn 1s ease 0.5s both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Enhanced Responsive Design */
+    
+    /* Mobile First - Base styles for mobile */
+    body {
+      padding: 1rem;
+      align-items: flex-start;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .calculator-container {
+      width: 100%;
+      max-width: 100%;
+      padding: 0;
+    }
+
+    .glass-card {
+      padding: 1.5rem;
+      margin: 0;
+    }
+
+    .neon-text {
+      font-size: 1.5rem !important;
+      line-height: 1.2;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .input-wrapper {
+      margin-bottom: 1.5rem;
+    }
+
+    .input-label {
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .input-field {
+      padding: 1rem 1.25rem;
+      font-size: 16px; /* Prevents zoom on iOS */
+      min-height: 48px; /* Touch target */
+    }
+
+    .calculate-btn {
+      padding: 1.25rem 1.5rem;
+      font-size: 1.1rem;
+      min-height: 56px; /* Touch target */
+    }
+
+    .results-card {
+      margin-top: 1.5rem;
+      padding: 1.5rem;
+    }
+
+    .mood-indicator {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .result-text {
+      font-size: 1rem;
+      line-height: 1.5;
+      margin-bottom: 1rem;
+    }
+
+    .result-stats {
+      padding: 1rem;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .stat-row {
+      padding: 0.5rem 0.75rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .progress-container {
+      margin-top: 1rem;
+    }
+
+    .progress-bar {
+      height: 10px;
+    }
+
+    .back-btn {
+      top: 1rem;
+      left: 1rem;
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+      min-height: 44px; /* Touch target */
+    }
+
+    .back-btn .arrow {
+      font-size: 1.1rem;
+    }
+
+    .toast {
+      top: 1rem;
+      right: 1rem;
+      left: 1rem;
+      font-size: 0.9rem;
+      padding: 1rem 1.25rem;
+    }
+
+    .fun-quote {
+      font-size: 0.8rem;
+      margin-top: 1rem;
+    }
+
+    /* Tablet styles */
+    @media (min-width: 480px) {
+      body {
+        padding: 1.5rem;
+        align-items: center;
+      }
+
+      .calculator-container {
+        max-width: 450px;
+      }
+
+      .glass-card {
+        padding: 2rem;
+      }
+
+      .neon-text {
+        font-size: 2rem !important;
+      }
+
+      .subtitle {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+      }
+
+      .input-wrapper {
+        margin-bottom: 2rem;
+      }
+
+      .input-label {
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .input-field {
+        padding: 1.25rem 1.5rem;
+        font-size: 1rem;
+      }
+
+      .calculate-btn {
+        padding: 1.5rem 2rem;
+        font-size: 1.2rem;
+      }
+
+      .results-card {
+        margin-top: 2rem;
+        padding: 2rem;
+      }
+
+      .mood-indicator {
+        font-size: 3rem;
+        margin-bottom: 1.25rem;
+      }
+
+      .result-text {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin-bottom: 1.25rem;
+      }
+
+      .result-stats {
+        padding: 1.25rem;
+        font-size: 1rem;
+        line-height: 1.7;
+      }
+
+      .stat-row {
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .progress-container {
+        margin-top: 1.25rem;
+      }
+
+      .progress-bar {
+        height: 12px;
+      }
+
+      .back-btn {
+        top: 1.5rem;
+        left: 1.5rem;
+        padding: 1rem 1.25rem;
+        font-size: 1rem;
+      }
+
+      .toast {
+        top: 1.5rem;
+        right: 1.5rem;
+        left: auto;
+        max-width: 400px;
+        font-size: 1rem;
+        padding: 1.25rem 1.5rem;
+      }
+
+      .fun-quote {
+        font-size: 0.9rem;
+        margin-top: 1.25rem;
+      }
+    }
+
+    /* Desktop styles */
+    @media (min-width: 768px) {
+      body {
+        padding: 2rem;
+      }
+
+      .calculator-container {
+        max-width: 500px;
+      }
+
+      .glass-card {
+        padding: 2.5rem;
+      }
+
+      .neon-text {
+        font-size: 2.5rem !important;
+      }
+
+      .subtitle {
+        font-size: 1.1rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .input-wrapper {
+        margin-bottom: 2.5rem;
+      }
+
+      .input-label {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+      }
+
+      .input-field {
+        padding: 1.5rem 2rem;
+        font-size: 1.1rem;
+      }
+
+      .calculate-btn {
+        padding: 1.75rem 2.5rem;
+        font-size: 1.3rem;
+      }
+
+      .results-card {
+        margin-top: 2.5rem;
+        padding: 2.5rem;
+      }
+
+      .mood-indicator {
+        font-size: 3.5rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .result-text {
+        font-size: 1.2rem;
+        line-height: 1.7;
+        margin-bottom: 1.5rem;
+      }
+
+      .result-stats {
+        padding: 1.5rem;
+        font-size: 1.1rem;
+        line-height: 1.8;
+      }
+
+      .stat-row {
+        padding: 1rem 1.25rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .progress-container {
+        margin-top: 1.5rem;
+      }
+
+      .progress-bar {
+        height: 14px;
+      }
+
+      .back-btn {
+        top: 2rem;
+        left: 2rem;
+        padding: 1.25rem 1.5rem;
+        font-size: 1.1rem;
+      }
+
+      .toast {
+        top: 2rem;
+        right: 2rem;
+        max-width: 450px;
+        font-size: 1.1rem;
+        padding: 1.5rem 2rem;
+      }
+
+      .fun-quote {
+        font-size: 1rem;
+        margin-top: 1.5rem;
+      }
+    }
+
+    /* Large desktop styles */
+    @media (min-width: 1024px) {
+      .calculator-container {
+        max-width: 550px;
+      }
+
+      .glass-card {
+        padding: 3rem;
+      }
+
+      .neon-text {
+        font-size: 3rem !important;
+      }
+    }
+
+    /* Extra large screens */
+    @media (min-width: 1280px) {
+      .calculator-container {
+        max-width: 600px;
+      }
+    }
+
+    /* Landscape mobile orientation */
+    @media (max-height: 500px) and (orientation: landscape) {
+      body {
+        padding: 0.5rem;
+        align-items: flex-start;
+        padding-top: 1rem;
+      }
+
+      .calculator-container {
+        max-width: 100%;
+      }
+
+      .glass-card {
+        padding: 1rem;
+      }
+
+      .neon-text {
+        font-size: 1.25rem !important;
+      }
+
+      .subtitle {
+        font-size: 0.8rem;
+        margin-bottom: 1rem;
+      }
+
+      .input-wrapper {
+        margin-bottom: 1rem;
+      }
+
+      .input-field {
+        padding: 0.75rem 1rem;
+        font-size: 14px;
+      }
+
+      .calculate-btn {
+        padding: 1rem 1.5rem;
+        font-size: 1rem;
+      }
+
+      .results-card {
+        margin-top: 1rem;
+        padding: 1rem;
+      }
+
+      .mood-indicator {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .result-text {
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .result-stats {
+        padding: 0.75rem;
+        font-size: 0.8rem;
+      }
+
+      .back-btn {
+        top: 0.5rem;
+        left: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+      }
+    }
+
+    /* High DPI displays */
+    @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+      .glass-card {
+        border-width: 0.5px;
+      }
+    }
+
+    /* Reduced motion preferences */
+    @media (prefers-reduced-motion: reduce) {
+      .bg-orb,
+      .neon-text,
+      .title-emoji,
+      .mood-indicator,
+      .result-highlight,
+      .result-warning,
+      .result-success,
+      .progress-bar,
+      .calculate-btn:hover,
+      .back-btn:hover,
+      .input-field:focus,
+      .stat-row:hover {
+        animation: none;
+        transition: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background Orbs -->
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+
+  <!-- Back Button -->
+  <a href="index.html" class="back-btn">
+    <span class="arrow">←</span>
+    <span>Back to Timetable</span>
+  </a>
+
+  <!-- Main Calculator Container -->
+  <div class="calculator-container">
+    <div class="glass-card p-8">
+      <!-- Title -->
+      <h1 class="text-2xl md:text-3xl font-bold text-center mb-2 neon-text">Attendance Calculator <span class="title-emoji">📊</span></h1>
+      <p class="text-center subtitle mb-8">Check your attendance status and see if you're on track!</p>
+
+      <!-- Required Attendance Dropdown -->
+      <div class="mb-6 input-wrapper">
+        <label class="input-label">
+          <span class="label-icon">🎯</span>
+          Required Attendance %
+        </label>
+        <select id="requiredPercentage" class="input-field">
+          <option value="60">60% - Barely Surviving</option>
+          <option value="65">65% - Living Dangerously</option>
+          <option value="70">70% - Playing it Cool</option>
+          <option value="75" selected>75% - The Sweet Spot</option>
+          <option value="80">80% - Teacher's Pet Zone</option>
+          <option value="85">85% - Overachiever Alert</option>
+          <option value="90">90% - Legend Status</option>
+        </select>
+      </div>
+
+      <!-- Classes Attended Input -->
+      <div class="mb-6 input-wrapper">
+        <label class="input-label">
+          <span class="label-icon">✅</span>
+          Classes Attended
+        </label>
+        <input 
+          type="number" 
+          id="classesAttended" 
+          class="input-field" 
+          placeholder="How many did you actually show up to?"
+          min="0"
+        >
+      </div>
+
+      <!-- Total Classes Input -->
+      <div class="mb-6 input-wrapper">
+        <label class="input-label">
+          <span class="label-icon">📚</span>
+          Total Classes
+        </label>
+        <input 
+          type="number" 
+          id="totalClasses" 
+          class="input-field" 
+          placeholder="All classes till now"
+          min="0"
+        >
+      </div>
+
+      <!-- Calculate Button -->
+      <button class="calculate-btn" onclick="calculateAttendance()">
+        <span class="btn-icon">✨</span>
+        <span>Calculate My Fate</span>
+      </button>
+
+      <!-- Results Card -->
+      <div id="resultsCard" class="results-card hidden">
+        <div id="resultsContent"></div>
+      </div>
+
+      <!-- Fun Quote -->
+      <div class="fun-quote" id="funQuote"></div>
+    </div>
+  </div>
+
+  <script>
+    // Array of fun quotes
+    const quotes = [
+      "Never forget Bappa Ghosh Sir 😎",
+      "Pro tip: Eat Dahi Bara!",
+      "Life is short, but attendance shortage is shorter 📉",
+      "Bunk responsibly, calculate wisely! 🎯",
+      "Your attendance, your rules... well, sort of 📋"
+    ];
+
+    // Display random quote
+    function showRandomQuote() {
+      const quoteElement = document.getElementById('funQuote');
+      const randomIndex = Math.floor(Math.random() * quotes.length);
+      quoteElement.textContent = quotes[randomIndex];
+    }
+
+    // Show toast notification
+    function showToast(message, icon = '⚠️') {
+      // Remove existing toast if any
+      const existingToast = document.querySelector('.toast');
+      if (existingToast) {
+        existingToast.remove();
+      }
+
+      // Create new toast
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `
+        <span class="toast-icon">${icon}</span>
+        <span>${message}</span>
+      `;
+      document.body.appendChild(toast);
+
+      // Auto-remove after 3 seconds
+      setTimeout(() => {
+        toast.classList.add('hide');
+        setTimeout(() => toast.remove(), 400);
+      }, 3000);
+    }
+
+    // Array of humor messages for different scenarios
+    const humorMessages = {
+      canBunk: [
+        "🎉 Party time! You're in the safe zone!",
+        "🔥 Bunk game strong! Go enjoy life!",
+        "😎 Living the dream! Bunk away, champion!",
+        "🚀 Houston, we have clearance for bunking!",
+        "🏖️ Beach day approved by the attendance gods!"
+      ],
+      needAttend: [
+        "🚨 Red alert! Time to befriend the classroom!",
+        "😰 Mayday! Mayday! Attendance emergency!",
+        "🏃 Sprint to class like your grade depends on it!",
+        "📚 Time to become best friends with your desk!",
+        "⏰ Rise and shine! Classes are calling your name!"
+      ],
+      perfect: [
+        "🌟 Perfectly balanced, as all things should be!",
+        "💯 You've mastered the attendance game!",
+        "🎯 Bulls-eye! Right on target!",
+        "🏆 Achievement unlocked: Attendance Ninja!",
+        "✨ You're the chosen one of attendance!"
+      ]
+    };
+
+    // Get random humor message
+    function getRandomHumor(type) {
+      const messages = humorMessages[type];
+      return messages[Math.floor(Math.random() * messages.length)];
+    }
+
+    // Main calculation function
+    function calculateAttendance() {
+      // Get input values
+      const requiredPercentage = parseFloat(document.getElementById('requiredPercentage').value);
+      const attended = parseFloat(document.getElementById('classesAttended').value);
+      const total = parseFloat(document.getElementById('totalClasses').value);
+
+      // Validate inputs
+      if (!attended && attended !== 0) {
+        showToast('Please enter classes attended!', '📝');
+        return;
+      }
+
+      if (!total && total !== 0) {
+        showToast('Please enter total classes!', '📊');
+        return;
+      }
+
+      if (total <= 0) {
+        showToast('Total classes must be greater than 0!', '🤔');
+        return;
+      }
+
+      if (attended < 0) {
+        showToast('Time travel not supported yet!', '⏳');
+        return;
+      }
+
+      if (attended > total) {
+        showToast('Wow! Attending extra classes from parallel universe?', '🌌');
+        return;
+      }
+
+      // Calculate current percentage
+      const currentPercentage = (attended / total) * 100;
+
+      // Get results container
+      const resultsCard = document.getElementById('resultsCard');
+      const resultsContent = document.getElementById('resultsContent');
+
+      // Check if current percentage meets requirement
+      if (currentPercentage < requiredPercentage) {
+        // Need to attend more classes
+        const classesNeeded = calculateClassesNeeded(attended, total, requiredPercentage);
+        const futureTotal = total + classesNeeded;
+        const futureAttended = attended + classesNeeded;
+        const futurePercentage = (futureAttended / futureTotal) * 100;
+        
+        const humorMsg = getRandomHumor('needAttend');
+
+        resultsContent.innerHTML = `
+          <div class="mood-indicator">😬</div>
+          <p class="result-text">
+            <span class="result-warning">${humorMsg}</span>
+          </p>
+          <p class="result-text">
+            You need to attend <span class="result-highlight">${classesNeeded} consecutive class${classesNeeded !== 1 ? 'es' : ''}</span> 
+            to reach the safe haven of <span class="result-highlight">${requiredPercentage}%</span>
+          </p>
+          
+          <div class="result-stats">
+            <div class="stat-row"><strong>📊 Current Status:</strong> ${attended}/${total} = <span class="result-warning">${currentPercentage.toFixed(1)}%</span></div>
+            <div class="stat-row"><strong>🎯 Target Status:</strong> ${futureAttended}/${futureTotal} = <span class="result-success">${futurePercentage.toFixed(1)}%</span></div>
+            <div class="stat-row"><strong>⚡ Action Required:</strong> Attend next ${classesNeeded} class${classesNeeded !== 1 ? 'es' : ''} without fail!</div>
+          </div>
+          
+          <div class="progress-container">
+            <div class="progress-bar" style="width: ${(currentPercentage/requiredPercentage)*100}%"></div>
+          </div>
+        `;
+      } else if (currentPercentage >= requiredPercentage + 10) {
+        // Can bunk many classes - perfect attendance
+        const canBunk = calculateCanBunk(attended, total, requiredPercentage);
+        const futureTotal = total + canBunk;
+        const futurePercentage = (attended / futureTotal) * 100;
+        
+        const humorMsg = getRandomHumor('perfect');
+
+        resultsContent.innerHTML = `
+          <div class="mood-indicator">🤩</div>
+          <p class="result-text">
+            <span class="result-success">${humorMsg}</span>
+          </p>
+          <p class="result-text">
+            You can bunk <span class="result-highlight">${canBunk} class${canBunk !== 1 ? 'es' : ''}</span> 
+            and still maintain a healthy <span class="result-highlight">${requiredPercentage}%</span>!
+          </p>
+          
+          <div class="result-stats">
+            <div class="stat-row"><strong>🌟 Current Status:</strong> ${attended}/${total} = <span class="result-success">${currentPercentage.toFixed(1)}%</span></div>
+            <div class="stat-row"><strong>🏖️ After Max Bunking:</strong> ${attended}/${futureTotal} = <span class="result-highlight">${futurePercentage.toFixed(1)}%</span></div>
+            <div class="stat-row"><strong>💰 Bunk Balance:</strong> ${canBunk} class${canBunk !== 1 ? 'es' : ''} in your account!</div>
+          </div>
+          
+          <div class="progress-container">
+            <div class="progress-bar" style="width: 100%"></div>
+          </div>
+        `;
+      } else {
+        // Can bunk classes
+        const canBunk = calculateCanBunk(attended, total, requiredPercentage);
+        const futureTotal = total + canBunk;
+        const futurePercentage = (attended / futureTotal) * 100;
+        
+        const humorMsg = getRandomHumor('canBunk');
+
+        resultsContent.innerHTML = `
+          <div class="mood-indicator">😄</div>
+          <p class="result-text">
+            <span class="result-highlight">${humorMsg}</span>
+          </p>
+          <p class="result-text">
+            You can safely bunk <span class="result-highlight">${canBunk} class${canBunk !== 1 ? 'es' : ''}</span> 
+            and maintain your <span class="result-highlight">${requiredPercentage}%</span> threshold!
+          </p>
+          
+          <div class="result-stats">
+            <div class="stat-row"><strong>✅ Current Status:</strong> ${attended}/${total} = <span class="result-highlight">${currentPercentage.toFixed(1)}%</span></div>
+            <div class="stat-row"><strong>🎮 After Bunking:</strong> ${attended}/${futureTotal} = <span class="result-highlight">${futurePercentage.toFixed(1)}%</span></div>
+            <div class="stat-row"><strong>🎯 Safe to Skip:</strong> Next ${canBunk} class${canBunk !== 1 ? 'es' : ''}</div>
+          </div>
+          
+          <div class="progress-container">
+            <div class="progress-bar" style="width: ${(currentPercentage/requiredPercentage)*100}%"></div>
+          </div>
+        `;
+      }
+
+      // Show results with animation
+      resultsCard.classList.remove('hidden');
+      resultsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      // Show random quote
+      showRandomQuote();
+    }
+
+    // Calculate how many classes needed to reach target percentage
+    function calculateClassesNeeded(attended, total, targetPercentage) {
+      // Formula: (attended + x) / (total + x) = targetPercentage / 100
+      // Solving for x: x = (attended - total * targetPercentage/100) / (targetPercentage/100 - 1)
+      const targetDecimal = targetPercentage / 100;
+      const classesNeeded = Math.ceil((attended - total * targetDecimal) / (targetDecimal - 1));
+      return Math.max(0, classesNeeded);
+    }
+
+    // Calculate how many classes can be bunked while maintaining target percentage
+    function calculateCanBunk(attended, total, targetPercentage) {
+      // Formula: attended / (total + x) = targetPercentage / 100
+      // Solving for x: x = (attended / targetDecimal) - total
+      const targetDecimal = targetPercentage / 100;
+      const canBunk = Math.floor((attended / targetDecimal) - total);
+      return Math.max(0, canBunk);
+    }
+
+    // Initialize the app
+    function init() {
+      showRandomQuote();
+      
+      // Add enter key support for inputs
+      const inputs = document.querySelectorAll('.input-field');
+      inputs.forEach(input => {
+        input.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            calculateAttendance();
+          }
+        });
+      });
+
+      // Add focus effects
+      inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+          this.parentElement.classList.add('focused');
+        });
+        
+        input.addEventListener('blur', function() {
+          this.parentElement.classList.remove('focused');
+        });
+      });
+    }
+
+    // Start the app when page loads
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
